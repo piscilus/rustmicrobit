@@ -20,7 +20,8 @@
                     "coreIndex": 0,
                     "programBinary": "target/thumbv7em-none-eabihf/debug/rustmicrobit"
                 }
-            ]
+            ],
+            "preLaunchTask": "rust: cargo build"
         }
     ]
 }
