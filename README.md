@@ -2,26 +2,30 @@
 
 ## Introduction
 
-This repository is a template and documentation for a development environment
-for (embedded) Rust. The target platform is a
+This repository provides a template and documentation for setting up a
+development environment for (embedded) Rust, specifically targeting the
 [BBC micro:bit](https://microbit.org/).
 
-The development environment runs on Ubuntu on Windows 11 host (WSL 2).
+The development environment is designed to run on Ubuntu within a Windows 11
+host using WSL 2.
 
 ## Hardware
 
-This project covers **BBC micro:bit v2**:
+The **BBC micro:bit v2** is used for this project.
 
 - MCU: Nordic nRF52833
-  - Core: ARM Cortex-M4
+  - Core: ARM Cortex-M4 + FPU
+  - Clock: 64 MHz
   - Flash: 512 KiB
   - RAM: 128 KiB
-  - Clock: 64 MHz
 
-## Setup
+Technical details can be found at <https://tech.microbit.org/>.
 
-- VSC
-- Ubuntu WSL 2
+## Setup the Development Environment
+
+This guide assumes that Ubuntu is installed on Windows 11 using WSL 2, and that
+Visual Studio Code is set up with remote access. For more details, refer to the
+documentation: <https://code.visualstudio.com/docs/remote/wsl>.
 
 The setup of the development environment consists of multiple steps. Some
 prerequisites must be performed on the Windows host system. The actual Rust
@@ -29,17 +33,18 @@ instance must be setup on Ubuntu.
 
 ### Windows
 
-Some steps need to be done to forward USB devices to WSL. **usbipd** is used to
-forward USB devices to WSL 2 (see
-<https://learn.microsoft.com/en-us/windows/wsl/connect-usb>).
+The host system (Windows) needs to be prepared to forward USB devices to WSL.
 
-The installation via *winget* is very simple:
+This can be achieved with **usbipd** (see
+<https://learn.microsoft.com/en-us/windows/wsl/connect-usb>) and can quickly be
+set up via *winget*:
 
 ```console
 winget install --interactive --exact dorssel.usbipd-win
 ```
 
-Forward a device:
+The following initial preparation needs to be performed once (for a particular
+device):
 
 1. Connect the device (BBC micro:bit) to the PC via USB.
 2. Open Administrator PowerShell and get a list of  all connected USB devices:
@@ -59,32 +64,35 @@ Forward a device:
     usbipd bind --busid 2-5
     ```
 
-4. Now, everything is prepared and the device can be attached or detached:
+Now, everything is prepared and the device can be attached or detached whenever
+access is desired on Windows or Linux:
 
-    ```console
-    usbipd attach --wsl --busid 2-5
-    usbipd detach --busid 2-5
-    ```
+```console
+usbipd attach --wsl --busid 2-5
+usbipd detach --busid 2-5
+```
 
 ### Linux (WSL)
 
-The device should be available under Linux now:
+If the USB device is attached to WSL, it should be available on Linux:
 
 ```console
 $ lsusb | grep -i "NXP ARM mbed"
 Bus 001 Device 002: ID 0d28:0204 NXP ARM mbed
 ```
 
-Before the device can be used, the access rights for the particular device (in
-this case 001/002) should be checked:
+To be able to use the device without root privileges, a few steps must be
+carried out once for the particular device (in this case `001/002`).
+
+The following command can be used to check the privileges. In this case, the
+output shows the default privileges (`crw-rw-r--`).
 
 ```console
 $ ls -ls /dev/bus/usb/001/002
 0 crw-rw-r-- 1 root root 189, 1 May 22 17:00 /dev/bus/usb/001/002
 ```
 
-In this case, root privileges are required to access the device.
-This can be changed by adding a *udev rule*:
+The access can be extended with a *udev rule*:
 
 1. Create a new file:
 
@@ -105,8 +113,8 @@ This can be changed by adding a *udev rule*:
     sudo udevadm control --reload-rules`
     ```
 
-4. Reconnect the device and check the rules. Please not that the device number
-   may has changed:
+4. Reconnect the device and check the rules. Please note that the device number
+   may have changed:
 
     ```console
     $ lsusb | grep -i "NXP ARM mbed"
@@ -117,21 +125,24 @@ This can be changed by adding a *udev rule*:
 
 ### Prepare Linux
 
-Install Rust.
+This guide assumes that Rust is already installed and verified on Ubuntu
+(<https://rustup.rs/>). I recommend to get familiar with Rust before proceeding
+with this guide.
 
-Install gdb:
-
+Install GNU Debugger **gdb**:
 
 ```console
 sudo apt install gdb-multiarch minicom
 ```
 
-Install probe-rs:
+Install Rust embedded debug toolkit **probe-rs**:
 
 ```console
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/probe-rs/probe-rs/releases/latest/download/probe-rs-tools-installer.sh | sh
 source $HOME/.cargo/env
 ```
+
+Install Visual Studio Code extension **probe-rs.probe-rs-debugger**.
 
 ## New Project
 
